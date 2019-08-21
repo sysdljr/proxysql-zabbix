@@ -1,7 +1,7 @@
 #!/usr/bin/python2.7
 import sys
 import json
-import mysql.connector
+import pymysql
 import argparse
 import ConfigParser
 import socket
@@ -15,8 +15,8 @@ class proxysql:
         def __init__(self, proxysql_host, proxysql_port, proxysql_user, proxysql_password):
             try:
                 self.connection = mysql.connector.connect(host=proxysql_host, port=proxysql_port, user=proxysql_user, passwd=proxysql_password, db="stats")
-                self.cursor = self.connection.cursor(dictionary=True)
-            except mysql.connector.errors.DatabaseError:
+                self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
+            except pymysql.connector.errors.DatabaseError:
                 pass
 
         def __del__(self):
@@ -65,7 +65,7 @@ class proxysql:
         def get_proxysql_cluster(self, args):
                 server_checksum = self.__query("""SELECT checksum
                                                   FROM stats_proxysql_servers_checksums
-                                                  WHERE hostname in( "%s") and  name in ("%s");""" % (socket.getfqdn(),args.param))[0]['checksum']
+                                                  WHERE hostname in( "%s") and  name in ("%s");""" % (mysqlip,args.param))[0]['checksum']
                 total_servers  = self.__query("""SELECT CAST(COUNT(checksum) AS INT) as checksum
                                                  FROM stats_proxysql_servers_checksums
                                                  WHERE name in ("%s");""" % (args.param))[0]['checksum']
@@ -93,6 +93,8 @@ config = ConfigParser.ConfigParser()
 config.readfp(open(conf_file))
 proxysql_user = config.get('client', 'user')
 proxysql_password = config.get('client', 'password')
+mysqlip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close())
+            for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
 
 pcon = proxysql(proxysql_host, proxysql_port, proxysql_user, proxysql_password)
 parser = argparse.ArgumentParser(prog="proxysql")
