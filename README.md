@@ -5,6 +5,6 @@ requires pymysql
 
 example:
 
-/etc/zabbix/scripts/proxysql.py get ping
+/srv/zabbix/agent/scripts/proxysql/proxysql.py get ping
 
-/etc/zabbix/scripts/proxysql.py get cluster 'proxysql_servers'
+/srv/zabbix/agent/scripts/proxysql/proxysql.py get cluster 'proxysql_servers'
