@@ -88,7 +88,16 @@ class proxysql:
         data = self.__query("""SELECT Variable_Value
                                FROM stats_mysql_global
                                WHERE Variable_Name = '%s';""" % (args.param))[0]
-        return (self.__printf(data["Variable_Value"]))            
+        return (self.__printf(data["Variable_Value"]))        
+    
+    def get_response_time(self, args):
+        data = self.__query("SELECT MAX(response_time_ms) AS rstime FROM stats_proxysql_servers_metrics")[0]
+        return (self.__printf(data["rstime"]))
+
+    def get_sql_avg_time(self, args):
+        data = self.__query("select round(sum(sum_time)/(sum(count_star)*1000.0),3) as avg_time from stats_mysql_query_digest where first_seen >= strftime('%s', 'now') -60 "
+                            "and last_seen >= strftime('%s', 'now') -60")[0]
+        return (self.__printf(data["avg_time"]))
 
 if __name__ == '__main__':
     config = ConfigParser.ConfigParser()
@@ -117,6 +126,12 @@ if __name__ == '__main__':
 
     ping = subparsers.add_parser("ping", help="check ProxySQL connectivity")
     ping.set_defaults(func=pcon.ping)
+    
+    response_time = subparsers.add_parser("response_time_ms", help="check ProxySQL response time")
+    response_time.set_defaults(func=pcon.get_response_time)
+
+    sql_avg_time = subparsers.add_parser("sql_avg_time", help="check sql avg execute time")
+    sql_avg_time.set_defaults(func=pcon.get_sql_avg_time)
 
     get_variables = subparsers.add_parser("variable", help="get metrics from stats.stats_mysql_global")
     get_variables.add_argument("param", choices=["Client_Connections_aborted","Client_Connections_connected", "Client_Connections_created", "Server_Connections_aborted",
