@@ -16,7 +16,8 @@ class proxysql:
         try:
             self.connection = pymysql.connect(host=proxysql_host, port=proxysql_port, user=proxysql_user, passwd=proxysql_password, db="stats")
             self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
-        except pymysql.connect.errors.DatabaseError:
+        #except pymysql.connect.errors.DatabaseError:
+        except Exception, e:
             pass
 
     def __del__(self):
